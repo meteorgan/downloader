@@ -21,8 +21,20 @@ class DownloadRecord(object):
         else:
             self.f = open(self.filename, "wb+")
 
+    def get_record_filename(self):
+        return self.filename
+
     def _validate(self):
-        pass
+        """校验是否是一个合法的record文件
+           判断各个字段是否正常，大小是否正确
+        """
+        return True
+
+    def is_downloading(self):
+        return os.path.exists(self.filename)
+
+    def clear(self):
+        self.f.truncate()
 
     def create_record(self, content_size, bulk_size=65536):
         self.content_size = content_size
@@ -46,18 +58,24 @@ class DownloadRecord(object):
     def close(self):
         self.f.close()
 
-    def _get_all_completed_bulks(self):
+    def _get_all_completed_seqs(self):
         bulk_status = self._get_all_bulks()
-        return filter(lambda status: status[1], bulk_status)
+        completed_bulks = filter(lambda status: status[1], bulk_status)
+        return map(lambda bulk: bulk[0], completed_bulks)
 
-    def get_all_uncompelted_range(self):
-        uncompleted_bulks = self._get_all_uncompeted_bulks()
-        seqs = map(lambda bulk_status: bulk_status[0], uncompleted_bulks)
-        return [(self.bulk_size * seq, self.bulk_size * (seq + 1)) for seq in seqs]
+    def get_bulk_range(self, seq):
+        bulk_num = self._get_bulk_num()
+        if seq < bulk_num - 1:
+            return (self.bulk_size * seq, self.bulk_size * (seq + 1))
+        elif seq == bulk_num - 1:
+            return (self.bulk_size * seq, self.content_size - 1)
 
-    def _get_all_uncompeted_bulks(self):
+        assert(0)
+
+    def get_all_uncompleted_seqs(self):
         bulk_status = self._get_all_bulks()
-        return filter(lambda status: not status[1], bulk_status)
+        uncompleted_bulks = filter(lambda status: not status[1], bulk_status)
+        return map(lambda bulk: bulk[0], uncompleted_bulks)
 
     def _get_all_bulks(self):
         bulk_num = self._get_bulk_num()
@@ -89,15 +107,12 @@ if __name__ == "__main__":
     record = DownloadRecord("http://dldir1.qq.com/qqfile/QQforMac/QQ_V4.1.1.dmg")
     #record.create_record(1000, 12)
     record.recover()
-    uncompleted_bulks = record.get_all_uncompeted_bulks()
-    size = len(uncompleted_bulks)
+    uncompleted_seqs = record.get_all_uncompleted_seqs()
+    size = len(uncompleted_seqs)
     print size
-    print uncompleted_bulks[0]
-    print uncompleted_bulks[size-1]
-
-    record.set_bulk_completed(10)
-    record.set_bulk_completed(19)
-    print record._get_all_completed_bulks()
+    if size > 0:
+        print uncompleted_seqs[0]
+        print uncompleted_seqs[size-1]
 
     record.close()
     #record.delete()

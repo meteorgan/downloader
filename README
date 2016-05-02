@@ -1,13 +1,19 @@
 多线程下载工具，支持断点续传
 
+断点续传文件格式:
+[url_size](2 bytes) [url] [contentsize](8 bytes) [bulksize](4 bytes) [seq, status](4 bytes + 1 bytes) [seq, status] ... [seq, status]
+
+
 TODO:
-1. 断点续传
+1. 断点续传 (Done)
 2. 处理重定向
 3. 网络异常等错误处理
 5. 校验
 6. 多文件参数
 7. 尝试多进程
 8. 进度条
+9. 长连接下载
 
 issue:
+如何准确判断一个文件是否可以分段下载？如果header中没有accept-ranges，也有可能支持分段下载(Done, header中加Range参数)
 
