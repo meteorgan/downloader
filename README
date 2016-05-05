@@ -9,10 +9,12 @@ TODO:
 2. 处理重定向
 3. 网络异常等错误处理
 5. 校验
-6. 多文件参数
+6. 多文件参数 (Done)
 7. 尝试多进程
 8. 进度条
 9. 长连接下载
+10. to support ftp
+11. 多文件并行下载
 
 issue:
 如何准确判断一个文件是否可以分段下载？如果header中没有accept-ranges，也有可能支持分段下载(Done, header中加Range参数)

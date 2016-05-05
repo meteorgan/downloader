@@ -14,15 +14,25 @@ import requests
 from download_record import DownloadRecord
 
 class Downloader(object):
-    def __init__(self, url, thread_num=3):
-        self.url = url
-        self.filename = self._get_file_name()
+    def __init__(self, urls, thread_num=3):
         self.thread_num = thread_num
         self.bulk_size = 2 ** 16
-        self.record = DownloadRecord(self.url)
+        self.urls = urls
 
     def start(self):
-        start_time = time.time()
+        for url in self.urls:
+            start_time = time.time()
+
+            self.url = url
+            self.filename = self._get_file_name()
+            logging.info("start to download %s" % self.filename)
+            self.download_single_file()
+
+            end_time = time.time()
+            logging.info("download %s spend %s seconds" % (self.filename, end_time - start_time))
+
+    def download_single_file(self):
+        self.record = DownloadRecord(self.url)
 
         head = self._get_head()
         length = self._get_content_length(head)
@@ -45,9 +55,6 @@ class Downloader(object):
             self._write_to_file(content, 0, len(content)-1)
 
         self.record.delete()
-
-        end_time = time.time()
-        logging.info("download spend %s seconds" % (end_time - start_time))
 
     def _use_multi_segment_download(self):
         queue = Queue()
@@ -116,7 +123,7 @@ class Downloader(object):
 
 
 def add_args(parser):
-    parser.add_argument("-u", "--url", type=str, required=True, help="url to download")
+    parser.add_argument("-u", "--url", nargs = '+', type=str, required=True, help="urls to download")
     parser.add_argument("-t", "--thread_num", type=int, default=3, help="thread number to download")
 
 
